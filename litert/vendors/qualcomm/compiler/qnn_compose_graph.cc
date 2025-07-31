@@ -989,8 +989,22 @@ void AddTensorToQnn(
     if (use_qint16_as_quint16) {
       tensor.ConvertQint16ToQuint16();
     }
-    qnn_api->tensorCreateGraphTensor(graph_handle, &(tensor.GetQnnTensor()));
-    created_tensors.emplace(&tensor);
+    auto error = qnn_api->tensorCreateGraphTensor(graph_handle,
+                                                  &(tensor.GetQnnTensor()));
+    if (QNN_SUCCESS != error) {
+      const char* message = nullptr;
+      auto get_message_error = qnn_api->errorGetMessage(error, &message);
+      if (QNN_SUCCESS == get_message_error) {
+        LITERT_LOG(LITERT_ERROR,
+                   "failed to create graph tensor, error: %d, message: %s",
+                   error, message);
+      } else {
+        LITERT_LOG(LITERT_ERROR, "failed to create graph tensor, error: %d",
+                   error);
+      }
+    } else {
+      created_tensors.emplace(&tensor);
+    }
   }
 }
 
@@ -1082,7 +1096,20 @@ LiteRtStatus MapGraph(QnnManager& qnn, Qnn_ContextHandle_t context_handle,
                      tensor_wrapper_ref.get(), created_tensors,
                      options.GetUseQint16AsQuint16());
     }
-    qnn.Api()->graphAddNode(graph_mapper.QnnGraph(), op_wrapper.GetOpConfig());
+    auto error = qnn.Api()->graphAddNode(graph_mapper.QnnGraph(),
+                                         op_wrapper.GetOpConfig());
+    if (QNN_SUCCESS != error) {
+      const char* message = nullptr;
+      auto get_message_error = qnn.Api()->errorGetMessage(error, &message);
+      if (QNN_SUCCESS == get_message_error) {
+        LITERT_LOG(LITERT_ERROR,
+                   "failed to add node into graph, error: %d, message: %s",
+                   error, message);
+      } else {
+        LITERT_LOG(LITERT_ERROR, "failed to add node into graph, error: %d",
+                   error);
+      }
+    }
   }
 
   LITERT_RETURN_STATUS_IF_QNN_NOT_OK(graph_mapper.Finalize());
