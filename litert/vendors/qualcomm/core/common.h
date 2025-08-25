@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "absl/strings/string_view.h"  // from @com_google_absl
+#include "QnnLog.h"  // from @qairt
 
 // c++ enum and wrapper without dependency.
 namespace qnn {
@@ -24,9 +25,7 @@ enum class LogLevel {
 
 enum class BackendType {
   kUndefinedBackend = 0,
-  kGpuBackend,
   kHtpBackend,
-  kDspBackend,
   kIrBackend,
 };
 
@@ -90,6 +89,10 @@ class Options {
   std::vector<std::int32_t> dump_tensor_ids_;
   std::string ir_json_dir_;
 };
+
+// Gets a default logger implementation to stdout.
+// This is used when initializing qnn logging.
+QnnLog_Callback_t GetDefaultStdOutLogger();
 
 }  // namespace qnn
 
